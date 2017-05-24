@@ -1,0 +1,13 @@
+vendor
+!vendor/app.php
+!vendor/config_examplephp
+!vendor/di.php
+!vendor/middleware.php
+!vendor/routes.php
+
+.idea/inspectionProfiles/
+.idea/modules.xml
+.idea/php.xml
+.idea/stalkdog.iml
+.idea/workspace.xml
+app.phar
