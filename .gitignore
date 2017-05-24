@@ -1,4 +1,4 @@
-vendor
+vendor/*
 !vendor/app.php
 !vendor/config_examplephp
 !vendor/di.php
