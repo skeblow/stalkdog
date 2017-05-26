@@ -7,11 +7,12 @@
  */
 $app->group('/v1', function () use ($app) {
 
-    $app->group('/users', function() use ($app) {
+    $app->group('/dogs', function() use ($app) {
         $app->get('[/]', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
             $return = [];
             /** @var Slim\PDO\Database $db */
             $db = $this->db;
+            $whoof = !empty($request->getQueryParam('whoof'));
 
             $stmt = $db->select(['osoby.*', 'MIN(Odchod) = \'0000-00-00 00:00:00\' as online'])
                 ->from('osoby')
@@ -21,12 +22,98 @@ $app->group('/v1', function () use ($app) {
             ;
 
             while ($user = $stmt->fetchObject()) {
-                $return[] = $user;
+                if ($whoof) {
+                    if (in_array($user->ID, [15, 16, 17, 18, 22])) {
+                        $return[] = $user;
+                    }
+                } else {
+                    $return[] = $user;
+                }
             }
 
             return $response->withJson($return);
         });
     });
+
+    $app->group('/hounds', function() use ($app) {
+        $app->post('/unleash', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
+            $body = $request->getParsedBody();
+
+            if (!is_array($body['dogs'])) {
+                return $response->withStatus(400)
+                    ->withJson(['error' => 'Body has no dogs.']);
+            }
+
+            /** @var Slim\PDO\Database $db */
+            $db = $this->db;
+
+            $now = (new DateTime())->format('Y-m-d H:i:s');
+
+            foreach ($body['dogs'] as $dog) {
+                $db->update(['Odchod' => $now])
+                    ->table('Dochazka')
+                    ->where('Odchod', '=' , '\'0000-00-00 00:00:00\'')
+                    ->where('OSID', '=', $dog)
+                    ->execute();
+            }
+
+            return $response->withStatus(204);
+        });
+
+        $app->post('/cage', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
+
+            $body = $request->getParsedBody();
+
+            if (!is_array($body['dogs'])) {
+                return $response->withStatus(400)
+                    ->withJson(['error' => 'Body has no dogs.']);
+            }
+
+            /** @var Slim\PDO\Database $db */
+            $db = $this->db;
+
+            $now = (new DateTime())->format('Y-m-d H:i:s');
+
+            try {
+                $db->beginTransaction();
+
+                foreach ($body['dogs'] as $dog) {
+                    $stmt = $db->select()
+                        ->count('*', 'c')
+                        ->from('Dochazka')
+                        ->where('Odchod', '=', '0000-00-00 00:00:00')
+                        ->where('OSID', '=', $dog)
+                        ->execute()
+                    ;
+
+                    $obj = $stmt->fetchObject();
+
+                    if ($obj->c) {
+                        throw new Exception();
+                    }
+
+                    $db->insert([
+                        'OSID' => $dog,
+                        'Prichod' => $now,
+                        'Odchod' => '\'0000-00-00 00:00:00\'',
+                    ])
+                        ->into('Dochazka')
+                        ->execute();
+                }
+
+                $db->commit();
+
+            } catch( Exception $ex ) {
+                $db->rollBack();
+                return $response->withStatus(400)
+                    ->withJson(['error' => 'Some dog is in.']);
+            }
+
+
+            return $response->withStatus(204);
+        });
+    });
+
 
     $app->group('/online', function() use ($app) {
         $app->get('[/]', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {

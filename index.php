@@ -1,3 +1,3 @@
 <?php
-//require 'app/app.php';
-require 'app.phar';
+require 'vendor/app.php';
+//require 'app.phar';

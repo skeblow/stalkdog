@@ -1,6 +1,6 @@
 vendor/*
 !vendor/app.php
-!vendor/config_examplephp
+!vendor/config_example.php
 !vendor/di.php
 !vendor/middleware.php
 !vendor/routes.php
