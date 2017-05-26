@@ -140,11 +140,14 @@ $app->group('/v1', function () use ($app) {
             /** @var Slim\PDO\Database $db */
             $db = $this->db;
 
+            $interval = new DateInterval('PT30M');
+
             $now = (new DateTime())->format('Y-m-d H:i:s');
-            $after = ((new DateTime())->add(new DateInterval('PT30M')))->format('Y-m-d H:i:s');
+            $after = new DateTime();
+            $after = $after->add($interval);
+            $after = $after->format('Y-m-d H:i:s');
 
             try {
-
                 foreach ($body['dogs'] as $dog) {
 
                     $stmt = $db->select()
@@ -175,16 +178,13 @@ $app->group('/v1', function () use ($app) {
                     ])
                         ->into('Dochazka')
                         ->execute();
-
                 }
-
 
                 return $response->withStatus(204);
             } catch( Exception $ex ) {
                 return $response->withStatus(400)
                     ->withJson(['error' => 'Some dog is in.']);
             }
-
         });
     });
 
