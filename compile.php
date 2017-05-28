@@ -28,11 +28,11 @@ function phar_add_dir($phar, $dir) {
         if ($i->getPathname() == 'LICENCE' || $i->getExtension() == 'php') {
             $filename = str_replace(__DIR__ . '/', '', $i->getPathname());
             $lower = strtolower($filename);
-            if (strpos($lower, 'test') === false /*&& strpos($lower,'phpunit') === false*/) {
+            //if (strpos($lower, 'test') === false /*&& strpos($lower,'phpunit') === false*/) {
                 echo $filename, "\n";
                 $phar->addFile($filename);
                 $phar[$filename]->compress(Phar::GZ);
-            }
+           // }
         }
     }
 }

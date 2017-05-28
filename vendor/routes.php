@@ -12,11 +12,13 @@ $app->group('/v1', function () use ($app) {
             $return = [];
             /** @var Slim\PDO\Database $db */
             $db = $this->db;
-            $whoof = !empty($request->getQueryParam('whoof'));
+            $whoof = $request->getQueryParam('whoof');
+            $whoof = !empty($whoof);
 
-            $stmt = $db->select(['osoby.*', 'MIN(Odchod) = \'0000-00-00 00:00:00\' as online'])
+            $stmt = $db->select(['osoby.ID','osoby.jmeno','osoby.prijmeni', 'MIN(Odchod) = \'0000-00-00 00:00:00\' as online'])
                 ->from('osoby')
                 ->join('Dochazka','Dochazka.OSID', '=', 'osoby.ID')
+                ->where('zobraz','=', 'a')
                 ->groupBy('osoby.ID')
                 ->execute()
             ;
@@ -40,6 +42,7 @@ $app->group('/v1', function () use ($app) {
                 } else {
                     $user->status = $user->online + 1;
                 }
+                unset($user->online);
 
                 if ($whoof) {
                     if (in_array($user->ID, [15, 16, 17, 18, 22])) {
@@ -57,6 +60,8 @@ $app->group('/v1', function () use ($app) {
     $app->group('/hounds', function() use ($app) {
         $app->post('/unleash', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
             $body = $request->getParsedBody();
+            $now = new DateTime();
+            $now = $now->format('Y-m-d H:i:s');
 
             if (!is_array($body['dogs'])) {
                 return $response->withStatus(400)
@@ -66,12 +71,10 @@ $app->group('/v1', function () use ($app) {
             /** @var Slim\PDO\Database $db */
             $db = $this->db;
 
-            $now = (new DateTime())->format('Y-m-d H:i:s');
-
             foreach ($body['dogs'] as $dog) {
                 $db->update(['Odchod' => $now])
                     ->table('Dochazka')
-                    ->where('Odchod', '=' , '\'0000-00-00 00:00:00\'')
+                    ->whereNull('Odchod')
                     ->where('OSID', '=', $dog)
                     ->execute();
             }
@@ -129,7 +132,7 @@ $app->group('/v1', function () use ($app) {
             }
         });
 
-        $app->post('/natankuj', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
+        $app->post('/feed', function (\Slim\Http\Request $request, \Slim\Http\Response $response) {
             $body = $request->getParsedBody();
 
             if (!is_array($body['dogs'])) {
@@ -167,7 +170,7 @@ $app->group('/v1', function () use ($app) {
 
                     $db->update(['Odchod' => $now])
                         ->table('Dochazka')
-                        ->where('Odchod', '=' , '\'0000-00-00 00:00:00\'')
+                        ->whereNull('Odchod')
                         ->where('OSID', '=', $dog)
                         ->execute();
 
@@ -200,6 +203,7 @@ $app->group('/v1', function () use ($app) {
                 ->join('Dochazka','Dochazka.OSID', '=', 'osoby.ID')
                 ->groupBy('osoby.ID')
                 ->where('Odchod', '=', '0000-00-00 00:00:00')
+                ->where('zobraz','=', 'a')
                 ->execute()
             ;
 
