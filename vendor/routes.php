@@ -15,10 +15,13 @@ $app->group('/v1', function () use ($app) {
             $whoof = $request->getQueryParam('whoof');
             $whoof = !empty($whoof);
 
-            $stmt = $db->select(['osoby.ID','osoby.jmeno','osoby.prijmeni', 'MIN(Odchod) = \'0000-00-00 00:00:00\' as online'])
+            $stmt = $db->select([
+                    'osoby.ID','osoby.jmeno','osoby.prijmeni', 
+                    'MIN(Odchod) = \'0000-00-00 00:00:00\' as online',
+                ])
                 ->from('osoby')
-                ->join('Dochazka','Dochazka.OSID', '=', 'osoby.ID')
-                ->where('zobraz','=', 'a')
+                ->leftJoin('Dochazka', 'Dochazka.OSID', '=', 'osoby.ID')
+                ->where('zobraz', '=', 'a')
                 ->groupBy('osoby.ID')
                 ->execute()
             ;
@@ -31,7 +34,7 @@ $app->group('/v1', function () use ($app) {
                     ->count('*', 'c')
                     ->from('Dochazka')
                     ->where('Prichod', '>', $now)
-                    ->where('OSID','=', $user->ID)
+                    ->where('OSID', '=', $user->ID)
                     ->execute()
                 ;
 
