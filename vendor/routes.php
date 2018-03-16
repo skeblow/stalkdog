@@ -14,6 +14,8 @@ $app->group('/v1', function () use ($app) {
             $db = $this->db;
             $whoof = $request->getQueryParam('whoof');
             $whoof = !empty($whoof);
+            
+            $bork = $request->getQueryParam('bork');
 
             $stmt = $db->select([
                     'osoby.ID','osoby.jmeno','osoby.prijmeni', 
@@ -27,6 +29,22 @@ $app->group('/v1', function () use ($app) {
             ;
 
             $now = (new DateTime())->format('Y-m-d H:i:s');
+            
+            $dogs = [
+                15, 16, 17, 18, 22, 23,
+            ];
+            $bitchez = [
+                1,
+                4,
+                9,
+                14,
+            ];
+            $rest = [
+                2,
+                19,
+                20,
+                24,
+            ];
 
             while ($user = $stmt->fetchObject()) {
 
@@ -46,14 +64,35 @@ $app->group('/v1', function () use ($app) {
                     $user->status = $user->online + 1;
                 }
                 unset($user->online);
+                
+                switch($bork) {
+                    case 'dogs':
+                        if (in_array($user->ID, $dogs)) {
+                            $return[] = $user;
+                        }
+                        break;
+                    case 'ajva':
+                        if (in_array($user->ID, $bitchez)) {
+                            $return[] = $user;
+                        }
+                        break;
+                    case 'rest':
+                        if (in_array($user->ID, $rest)) {
+                            $return[] = $user;
+                        }
+                        break;
+                    default: 
+                        $return[] = $user;
+                        break;
+                }
 
-                if ($whoof) {
+                /*if ($whoof) {
                     if (in_array($user->ID, [15, 16, 17, 18, 22])) {
                         $return[] = $user;
                     }
                 } else {
                     $return[] = $user;
-                }
+                }*/
             }
 
             return $response->withJson($return);
